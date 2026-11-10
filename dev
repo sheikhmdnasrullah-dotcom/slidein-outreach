@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# ============================================================
+# SlideIn — LOCAL ONE-COMMAND HOST (canonical console + dashboard).
+#
+# Starts the entire self-hosted stack on localhost:
+#   - Docker infrastructure: Redis, Mailpit (sink), KumoMTA (submission)
+#   - slidein-api : Slidein workflow API (FastAPI, the controller backend)
+#   - slidein-app : the unified Console + Dashboard page shell (Next.js)
+#
+# Console (controller) and Dashboard (viewer) are two modes of ONE page,
+# toggled in-app via the ModeSwitcher. This script never boots the legacy
+# Acquisition OS (`project/`) or `unified/` — both were quarantined because
+# they are duplicate dashboards and violate the Interface Architecture Rule.
+#
+# Usage:  ./dev          # start everything
+#         ./dev status   # health check
+#         ./stop         # tear everything down
+# ============================================================
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$HERE"
+
+API_DIR="$HERE/slidein-api"
+APP_DIR="$HERE/slidein-app"
+API_PORT=8100
+APP_PORT=3200
+
+log()  { echo "==> $*"; }
+warn() { echo "WARN: $*" >&2; }
+
+case "${1:-start}" in
+  status)
+    python3 "$HERE/doctor" || true
+    exit 0
+    ;;
+  stop)
+    exec "$HERE/stop"
+    ;;
+  start)
+    : # proceed to boot
+    ;;
+  *)
+    echo "Usage: $0 [start|status|stop]"; exit 2
+    ;;
+esac
+
+echo "=================================================================="
+echo "          SlideIn Local Host — Console + Dashboard                "
+echo "=================================================================="
+
+# 1. Docker daemon (Redis/Mailpit/KumoMTA)
+if ! docker info >/dev/null 2>&1; then
+    log "Starting Docker Desktop..."
+    open -a Docker || true
+    for i in $(seq 1 30); do
+        docker info >/dev/null 2>&1 && break
+        sleep 2
+    done
+fi
+
+# 2. Infrastructure via Docker Compose (Redis, Mailpit sink, KumoMTA)
+log "Booting infrastructure (Redis, Mailpit, KumoMTA)..."
+docker compose -f "$HERE/docker-compose.local.yml" up -d
+
+# 3. Wait for infra ports
+for i in $(seq 1 25); do
+    R=1; M=1; K=1
+    nc -z 127.0.0.1 6379 >/dev/null 2>&1 || R=0
+    nc -z 127.0.0.1 1025 >/dev/null 2>&1 || M=0
+    nc -z 127.0.0.1 2587 >/dev/null 2>&1 || K=0
+    [ $R -eq 1 ] && [ $M -eq 1 ] && [ $K -eq 1 ] && break
+    sleep 1
+done
+
+# 4. slidein-api (FastAPI :8100). Auth disabled for local so the shared
+#    console+dashboard render without an external identity provider.
+if [ -x "$API_DIR/.venv/bin/python" ]; then
+    API_VENV="$API_DIR/.venv/bin/python"
+else
+    API_VENV="python3"
+fi
+if ! nc -z 127.0.0.1 "$API_PORT" >/dev/null 2>&1; then
+    log "Starting slidein-api (workflow API, port $API_PORT)..."
+    SLIDEIN_HOST=127.0.0.1 SLIDEIN_PORT=$API_PORT SLIDEIN_AUTH_MODE=disabled \
+        SLIDEIN_DATABASE_URL="sqlite+aiosqlite:///$HERE/slidein.db" \
+        "$API_VENV" "$API_DIR/run.py" \
+        > "$HERE/slidein_api.log" 2>&1 &
+    sleep 1
+fi
+
+# 5. slidein-app (Next.js :3200) — the unified Console + Dashboard page shell.
+if ! nc -z 127.0.0.1 "$APP_PORT" >/dev/null 2>&1; then
+    log "Starting slidein-app (Console + Dashboard shell, port $APP_PORT)..."
+    cd "$APP_DIR"
+    SLIDEIN_API_URL="http://127.0.0.1:$API_PORT" \
+        SLIDEIN_WORKSPACE_ID=ten_local \
+        SLIDEIN_AUTH_MODE=disabled \
+        NEXT_PUBLIC_APP_URL="http://127.0.0.1:$APP_PORT" \
+        PORT=$APP_PORT \
+        npm run dev > "$HERE/nextjs_dev.log" 2>&1 &
+    cd "$HERE"
+    sleep 2
+fi
+
+# 6. Health print
+echo ""
+echo "=================================================================="
+echo "  SlideIn Live Services (localhost)"
+echo "=================================================================="
+echo "  - Console + Dashboard: http://127.0.0.1:$APP_PORT/"
+echo "      toggle Console (controller) / Dashboard (viewer) in-page"
+echo "  - Slidein Workflow API: http://127.0.0.1:$API_PORT/health"
+echo "  - Mailpit Inbound UI:   http://127.0.0.1:8025"
+echo "  - KumoMTA Admin API:    http://127.0.0.1:8029"
+echo "  - Redis Queue:          127.0.0.1:6379"
+echo "=================================================================="
+echo "  Run health check:        $0 status"
+echo "  Tests (backend):         cd slidein-api && .venv/bin/pytest -q"
+echo "  Tests (frontend):        cd slidein-app && npx tsc --noEmit"
+echo "=================================================================="
+exit 0

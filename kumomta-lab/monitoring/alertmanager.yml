@@ -1,0 +1,20 @@
+# Alertmanager config. The default receiver intentionally has no notifiers:
+# alerts are visible in the Alertmanager UI/API; outbound notification
+# wiring (webhook/email) is an open production-readiness item.
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: default
+  group_by: ["alertname", "severity"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+  routes:
+    - matchers: [severity = critical]
+      receiver: default
+    - matchers: [severity = warning]
+      receiver: default
+
+receivers:
+  - name: default

@@ -1,0 +1,59 @@
+Business Source License 1.1
+
+Parameters
+
+Licensor: Nasrullah Tanim
+Licensed Work: SlideIn (including slidein-api, workspace-app, and deliverability orchestration)
+Additional Use Grant:
+    You are permitted to install and run the Licensed Work on infrastructure that you
+    control, free of charge, solely for the internal business operations of a single
+    legal entity, and only to contact people on that entity's own behalf.
+
+    You are strictly PROHIBITED from:
+    (1) Offering, reselling, or providing the Licensed Work, or any derivative work,
+        as a hosted software-as-a-service (SaaS), managed service, platform-as-a-service,
+        or commercial cloud offering to third parties.
+    (2) Using the Licensed Work, or any derivative work, to perform services for, or
+        send or manage communications on behalf of, any client, customer or other person
+        or organization other than the single entity that operates the installation
+        (for example agency, consultancy, lead-generation, outsourced-outreach or
+        white-label use).
+    (3) Selling, licensing, sublicensing, leasing, renting or otherwise charging for the
+        Licensed Work or any derivative work, or bundling either into a paid product,
+        service or subscription.
+    (4) Removing or altering license, copyright or attribution notices, or presenting
+        the Licensed Work or a derivative work as your own product.
+
+Change Date: October 16, 2030
+Change License: Apache License, Version 2.0
+
+--------------------------------------------------------------------------------
+
+Notice
+
+The Licensor hereby grants you the right to copy, modify, create derivative works,
+and make non-production use of the Licensed Work, and to redistribute it free of
+charge with this license and all notices intact. Redistribution for a fee, or as part
+of a paid offering, is not permitted.
+
+Production use of the Licensed Work is permitted solely pursuant to the Additional
+Use Grant above. If you wish to use the Licensed Work outside the Additional Use
+Grant (including providing a managed service or cloud offering), you must obtain
+a commercial license from the Licensor.
+
+Effective on the Change Date, the Licensed Work will automatically be licensed under
+the Change License (Apache License, Version 2.0).
+
+Clean-Room Provenance & Non-Infringement Declaration
+
+SlideIn is an independently authored, clean-room software system.
+NO CODE, PROMPTS, DATABASE SCHEMAS, OR ASSETS ARE DERIVED FROM OR COPIED FROM
+OPENOUTREACH (GPLv3) OR ANY OTHER GPL-LICENSED OUTREACH UTILITIES.
+All contributors and automated coding agents are strictly bound by this policy.
+
+NO WARRANTY
+
+THE LICENSED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY.
